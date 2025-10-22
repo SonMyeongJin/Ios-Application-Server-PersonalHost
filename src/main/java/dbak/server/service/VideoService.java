@@ -19,10 +19,19 @@ public class VideoService {
 
     // 기존 S3Client 제거, 로컬 경로 주입
     public VideoService(@Value("${dbak.json.base-path:${user.home}/document/dbak}") String basePath) {
+        // 한글/공백 경로 인코딩 문제 회피 및 정규화
         this.baseDir = Paths.get(basePath).toAbsolutePath().normalize();
+        try {
+            if (Files.notExists(this.baseDir)) {
+                Files.createDirectories(this.baseDir);
+            }
+        } catch (IOException e) {
+            throw new IllegalStateException("JSON 디렉토리를 생성할 수 없습니다: " + this.baseDir + " | " + e.getMessage(), e);
+        }
         if (!Files.isDirectory(this.baseDir)) {
             throw new IllegalStateException("JSON 디렉토리가 존재하지 않습니다: " + this.baseDir);
         }
+        System.out.println("[VideoService] JSON Base Directory=" + this.baseDir);
     }
 
     // 로컬 디렉토리 내 모든 .json 파일 이름 목록 반환
